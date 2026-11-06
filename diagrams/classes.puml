@@ -1,0 +1,64 @@
+@startuml
+!pragma layout smetana
+hide empty members
+skinparam classAttributeIconSize 0
+title SplitSmart | Expense review and settlement
+class User {
+  id : UserId
+  email : String
+}
+class Group {
+  administratorId : UserId
+}
+class Membership {
+  joinedOn : Date
+  endedOn : Date [0..1]
+}
+class Expense {
+  amount : BigDecimal
+  status : ExpenseStatus
+  splitMethod : SplitMethod
+}
+class ExpenseShare {
+  participantId : UserId
+  amount : BigDecimal
+}
+class Approval {
+  reviewerId : UserId
+  decision : Decision
+  reason : String [0..1]
+}
+class Posting {
+  debtorId : UserId
+  creditorId : UserId
+  contextId : ContextId
+  amount : BigDecimal
+}
+class Balance <<derived>> {
+  netAmount : BigDecimal
+}
+class Payment {
+  amount : BigDecimal
+  contextId : ContextId
+}
+class ExpenseService {
+  submitExpense()
+  reviewExpense()
+}
+User "1" -- "0..*" Membership
+Group "1" -- "1..*" Membership
+Group "0..1" -- "0..*" Expense : context
+User "1" -- "0..*" Expense : creator
+User "1" -- "0..*" Expense : payer
+Expense "1" *-- "1..*" ExpenseShare
+Expense "1" *-- "0..*" Approval
+ExpenseShare "0..1" -- "0..1" Posting : obligation
+Payment "0..1" -- "1" Posting : settlement
+note right of Posting
+  Each posting has exactly one source:
+  an approved share or a payment.
+end note
+Balance ..> Posting : nets by pair and context
+ExpenseService ..> Expense
+ExpenseService ..> Approval
+@enduml

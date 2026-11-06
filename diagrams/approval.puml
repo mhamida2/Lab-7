@@ -1,0 +1,41 @@
+@startuml
+title SplitSmart | Review a group expense
+|Group member|
+start
+:Enter expense, payer and split;
+|Application|
+if (Authorized member and valid input?) then (yes)
+  :Save pending expense, shares and in-app notifications
+  to current members except the creator in one transaction;
+else (no)
+  :Show validation or access error;
+  stop
+endif
+|Reviewer|
+:Open pending expense and submit decision;
+|Application|
+if (Reviewer is group administrator?) then (yes)
+else (no)
+  :Deny review; leave expense pending;
+  stop
+endif
+:Begin write transaction and reread expense;
+if (Already decided?) then (yes)
+  :Return existing status;
+  stop
+endif
+if (Approve?) then (yes)
+  :Record approval and post each eligible share once;
+  :Commit approved state and postings together;
+else (reject)
+  if (Reason supplied?) then (yes)
+    :Commit rejected state with reason;
+  else (no)
+    :Return field error; keep expense pending;
+    stop
+  endif
+endif
+|Reviewer|
+:View status and current balances;
+stop
+@enduml
